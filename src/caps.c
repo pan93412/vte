@@ -254,6 +254,8 @@ const char _vte_xterm_capability_strings[] =
         ENTRY(OSC "117" BEL, "reset-highlight-background-color")
         ENTRY(OSC "118" BEL, "reset-tek-cursor-color")
         ENTRY(OSC "119" BEL, "reset-highlight-foreground-color")
+        ENTRY(OSC "777;%s;%s;%s" BEL, "send-notification")
+        ENTRY(OSC "777;%s;%s" BEL, "send-notification")
 
         COMMENT(/* Set text parameters, ST-terminated versions. */)
         ENTRY(OSC ";%s" ST, "set-icon-and-window-title") COMMENT(/* undocumented default */)
@@ -289,6 +291,8 @@ const char _vte_xterm_capability_strings[] =
         ENTRY(OSC "117" ST, "reset-highlight-background-color")
         ENTRY(OSC "118" ST, "reset-tek-cursor-color")
         ENTRY(OSC "119" ST, "reset-highlight-foreground-color")
+        ENTRY(OSC "777;%s;%s;%s" ST, "send-notification")
+        ENTRY(OSC "777;%s;%s" ST, "send-notification")
 
         COMMENT(/* These may be bogus, I can't find docs for them anywhere (#104154). */)
         ENTRY(OSC "21;%s" BEL, "set-text-property-21")

@@ -72,6 +72,7 @@ struct _VteTerminalClass {
 	void (*child_exited)(VteTerminal* terminal, int status);
 	void (*encoding_changed)(VteTerminal* terminal);
 	void (*char_size_changed)(VteTerminal* terminal, guint char_width, guint char_height);
+	void (*notification_received)(VteTerminal* terminal, const gchar *summary, const gchar *body);
 	void (*window_title_changed)(VteTerminal* terminal);
 	void (*icon_title_changed)(VteTerminal* terminal);
 	void (*selection_changed)(VteTerminal* terminal);
@@ -105,7 +106,7 @@ struct _VteTerminalClass {
 	void (*bell)(VteTerminal* terminal);
 
         /* Padding for future expansion. */
-        gpointer padding[16];
+        gpointer padding[15];
 
         VteTerminalClassPrivate *priv;
 };

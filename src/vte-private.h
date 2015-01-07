@@ -427,6 +427,11 @@ struct _VteTerminalPrivate {
 	gboolean cursor_moved_pending;
 	gboolean contents_changed_pending;
 
+	/* desktop notification */
+	gboolean notification_received;
+	gchar *notification_summary;
+	gchar *notification_body;
+
 	/* window name changes */
         gchar *window_title;
 	gchar *window_title_changed;

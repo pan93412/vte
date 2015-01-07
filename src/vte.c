@@ -8649,6 +8649,9 @@ vte_terminal_finalize(GObject *object)
 
 	remove_update_timeout (terminal);
 
+	g_free (terminal->pvt->notification_summary);
+	g_free (terminal->pvt->notification_body);
+
 	/* discard title updates */
         g_free(terminal->pvt->window_title);
         g_free(terminal->pvt->window_title_changed);
@@ -10384,6 +10387,7 @@ vte_terminal_class_init(VteTerminalClass *klass)
 	klass->child_exited = NULL;
 	klass->encoding_changed = NULL;
 	klass->char_size_changed = NULL;
+	klass->notification_received = NULL;
 	klass->window_title_changed = NULL;
 	klass->icon_title_changed = NULL;
 	klass->selection_changed = NULL;
@@ -10456,6 +10460,25 @@ vte_terminal_class_init(VteTerminalClass *klass)
                      g_cclosure_marshal_VOID__INT,
                      G_TYPE_NONE,
                      1, G_TYPE_INT);
+
+        /**
+         * VteTerminal::notification-received:
+         * @vteterminal: the object which received the signal
+         * @summary: The summary
+         * @body: (allow-none): Extra optional text
+         *
+         * Emitted when a process running in the terminal wants to
+         * send a notification to the desktop environment.
+         */
+        g_signal_new(I_("notification-received"),
+                     G_OBJECT_CLASS_TYPE(klass),
+                     G_SIGNAL_RUN_LAST,
+                     G_STRUCT_OFFSET(VteTerminalClass, notification_received),
+                     NULL,
+                     NULL,
+                     _vte_marshal_VOID__STRING_STRING,
+                     G_TYPE_NONE,
+                     2, G_TYPE_STRING, G_TYPE_STRING);
 
         /**
          * VteTerminal::window-title-changed:
@@ -12475,6 +12498,16 @@ need_processing (VteTerminal *terminal)
 	return _vte_incoming_chunks_length (terminal->pvt->incoming) != 0;
 }
 
+static void
+vte_terminal_emit_notification_received (VteTerminal *terminal)
+{
+	_vte_debug_print (VTE_DEBUG_SIGNALS,
+			  "Emitting `notification-received'.\n");
+	g_signal_emit_by_name (terminal, "notification-received",
+			       terminal->pvt->notification_summary,
+			       terminal->pvt->notification_body);
+}
+
 /* Emit an "icon-title-changed" signal. */
 static void
 vte_terminal_emit_icon_title_changed(VteTerminal *terminal)
@@ -12521,6 +12554,11 @@ vte_terminal_emit_pending_signals(VteTerminal *terminal)
         g_object_freeze_notify(object);
 
 	vte_terminal_emit_adjustment_changed (terminal);
+
+	if (terminal->pvt->notification_received) {
+		vte_terminal_emit_notification_received (terminal);
+		terminal->pvt->notification_received = FALSE;
+	}
 
 	if (terminal->pvt->window_title_changed) {
 		g_free (terminal->pvt->window_title);
