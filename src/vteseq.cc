@@ -1351,7 +1351,7 @@ Terminal::handle_urxvt_extension(vte::parser::Sequence const& seq,
 
                 m_notification_summary = *token;
                 m_notification_body.clear();
-                m_notification_received = true;
+                m_notification_received = TRUE;
                 ++token;
 
                 if (token == endtoken)
@@ -1359,12 +1359,6 @@ Terminal::handle_urxvt_extension(vte::parser::Sequence const& seq,
 
                 m_notification_body = *token;
                 return;
-        }
-
-        if (*token == "precmd") {
-                m_shell_precmd = TRUE;
-        } else if (*token == "preexec") {
-                m_shell_preexec = TRUE;
         }
 }
 

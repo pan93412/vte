@@ -105,11 +105,9 @@ struct _VteTerminalClass {
 	void (*bell)(VteTerminal* terminal);
 
 	void (*notification_received)(VteTerminal* terminal, const gchar *summary, const gchar *body);
-	void (*shell_precmd)(VteTerminal* terminal);
-	void (*shell_preexec)(VteTerminal* terminal);
 
         /* Padding for future expansion. */
-        gpointer padding[13];
+        gpointer padding[15];
 
         VteTerminalClassPrivate *priv;
 };
@@ -297,10 +295,6 @@ void vte_terminal_set_cursor_shape(VteTerminal *terminal,
 				   VteCursorShape shape) _VTE_GNUC_NONNULL(1);
 _VTE_PUBLIC
 VteCursorShape vte_terminal_get_cursor_shape(VteTerminal *terminal) _VTE_GNUC_NONNULL(1);
-
-_VTE_PUBLIC
-void vte_terminal_set_scroll_speed(VteTerminal *terminal,
-                                   guint scroll_speed) _VTE_GNUC_NONNULL(1);
 
 /* Set the number of scrollback lines, above or at an internal minimum. */
 _VTE_PUBLIC

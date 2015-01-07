@@ -517,9 +517,6 @@ vte_terminal_get_property (GObject *object,
                 case PROP_REWRAP_ON_RESIZE:
                         g_value_set_boolean (value, vte_terminal_get_rewrap_on_resize (terminal));
                         break;
-                case PROP_SCROLL_SPEED:
-                        g_value_set_uint (value, impl->m_scroll_speed);
-                        break;
                 case PROP_SCROLLBACK_LINES:
                         g_value_set_uint (value, vte_terminal_get_scrollback_lines(terminal));
                         break;
@@ -620,9 +617,6 @@ vte_terminal_set_property (GObject *object,
                         break;
                 case PROP_REWRAP_ON_RESIZE:
                         vte_terminal_set_rewrap_on_resize (terminal, g_value_get_boolean (value));
-                        break;
-                case PROP_SCROLL_SPEED:
-                        vte_terminal_set_scroll_speed (terminal, g_value_get_uint (value));
                         break;
                 case PROP_SCROLLBACK_LINES:
                         vte_terminal_set_scrollback_lines (terminal, g_value_get_uint (value));
@@ -736,8 +730,6 @@ vte_terminal_class_init(VteTerminalClass *klass)
 	klass->encoding_changed = NULL;
 	klass->char_size_changed = NULL;
 	klass->notification_received = NULL;
-	klass->shell_precmd = NULL;
-	klass->shell_preexec = NULL;
 	klass->window_title_changed = NULL;
 	klass->icon_title_changed = NULL;
 	klass->selection_changed = NULL;
@@ -832,40 +824,6 @@ vte_terminal_class_init(VteTerminalClass *klass)
                              _vte_marshal_VOID__STRING_STRING,
                              G_TYPE_NONE,
                              2, G_TYPE_STRING, G_TYPE_STRING);
-
-        /**
-         * VteTerminal::shell-precmd:
-         * @vteterminal: the object which received the signal
-         *
-         * Emitted right before an interactive shell shows a
-         * first-level prompt.
-         */
-        signals[SIGNAL_SHELL_PRECMD] =
-                g_signal_new(I_("shell-precmd"),
-                             G_OBJECT_CLASS_TYPE(klass),
-                             G_SIGNAL_RUN_LAST,
-                             G_STRUCT_OFFSET(VteTerminalClass, shell_precmd),
-                             NULL,
-                             NULL,
-                             g_cclosure_marshal_VOID__VOID,
-                             G_TYPE_NONE, 0);
-
-        /**
-         * VteTerminal::shell-preexec:
-         * @vteterminal: the object which received the signal
-         *
-         * Emitted when the interactive shell has read in a complete
-         * command and is about to execute it.
-         */
-        signals[SIGNAL_SHELL_PREEXEC] =
-                g_signal_new(I_("shell-preexec"),
-                             G_OBJECT_CLASS_TYPE(klass),
-                             G_SIGNAL_RUN_LAST,
-                             G_STRUCT_OFFSET(VteTerminalClass, shell_preexec),
-                             NULL,
-                             NULL,
-                             g_cclosure_marshal_VOID__VOID,
-                             G_TYPE_NONE, 0);
 
         /**
          * VteTerminal::window-title-changed:
@@ -1605,21 +1563,6 @@ vte_terminal_class_init(VteTerminalClass *klass)
                 g_param_spec_boolean ("rewrap-on-resize", NULL, NULL,
                                       TRUE,
                                       (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY));
-
-        /**
-         * VteTerminal:scroll-speed:
-         *
-         * The number of lines by which the buffer is moved when
-         * scrolling with a mouse wheel on top of the terminal
-         * Setting it to zero will cause the buffer to be moved by an
-         * amount depending on the number of visible rows the widget
-         * can display.
-         */
-        pspecs[PROP_SCROLL_SPEED] =
-                g_param_spec_uint ("scroll-speed", NULL, NULL,
-                                   0, G_MAXUINT,
-                                   0,
-                                   (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY));
 
         /**
          * VteTerminal:scrollback-lines:
@@ -4168,30 +4111,6 @@ vte_terminal_get_row_count(VteTerminal *terminal)
 {
 	g_return_val_if_fail(VTE_IS_TERMINAL(terminal), -1);
 	return IMPL(terminal)->m_row_count;
-}
-
-/**
- * vte_terminal_set_scroll_speed:
- * @terminal: a #VteTerminal
- * @scroll_speed: move the buffer by this number of lines while scrolling
- *
- * Sets the number of lines by which the buffer is moved when
- * scrolling with a mouse wheel. Setting it to zero will cause the
- * buffer to be moved by an amount depending on the number of visible
- * rows the widget can display.
- */
-void
-vte_terminal_set_scroll_speed(VteTerminal *terminal, guint scroll_speed)
-{
-        g_return_if_fail(VTE_IS_TERMINAL(terminal));
-
-        GObject *object = G_OBJECT(terminal);
-        g_object_freeze_notify(object);
-
-        if (IMPL(terminal)->set_scroll_speed(scroll_speed))
-                g_object_notify_by_pspec(object, pspecs[PROP_SCROLL_SPEED]);
-
-        g_object_thaw_notify(object);
 }
 
 /**

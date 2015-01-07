@@ -6651,7 +6651,6 @@ Terminal::maybe_end_selection()
                         widget_copy(VTE_SELECTION_PRIMARY, VTE_FORMAT_TEXT);
 			emit_selection_changed();
 		}
-                stop_autoscroll();  /* Required before setting m_selecting to false, see #105. */
 		m_selecting = false;
 
 		/* Reconnect to input from the child if we paused it. */
@@ -8084,7 +8083,7 @@ Terminal::~Terminal()
 	guint i;
 
         terminate_child();
-        set_pty(nullptr, false /* don't process remaining data */);
+        set_pty(nullptr);
         remove_update_timeout(this);
 
         /* Stop processing input. */
@@ -9365,17 +9364,7 @@ Terminal::widget_draw(cairo_t *cr)
 
         /* and now paint them */
         for (n = 0; n < n_rectangles; n++) {
-                /* paint_area() paints more than asked to (entire rows). Without an individual
-                 * cropping rectangle around each invocation we might end up with text getting
-                 * overstriked with itself, thus appearing bolder. See vte#4.
-                 * TODO: refactor so that paint_area() is called at most once for each row, see vte#56. */
-                cairo_save(cr);
-                cairo_rectangle(cr, rectangles[n].x, rectangles[n].y, rectangles[n].width, rectangles[n].height);
-                cairo_clip(cr);
-
                 paint_area(&rectangles[n]);
-
-                cairo_restore(cr);
         }
         g_free (rectangles);
 
@@ -9462,7 +9451,6 @@ void
 Terminal::widget_scroll(GdkEventScroll *event)
 {
 	gdouble delta_x, delta_y;
-	gdouble scroll_speed;
 	gdouble v;
 	gint cnt, i;
 	int button;
@@ -9516,13 +9504,7 @@ Terminal::widget_scroll(GdkEventScroll *event)
 		return;
 	}
 
-	if (m_scroll_speed == 0) {
-		scroll_speed = ceil (gtk_adjustment_get_page_increment (m_vadjustment) / 10.);
-	} else {
-		scroll_speed = m_scroll_speed;
-	}
-
-	v = MAX (1., scroll_speed);
+	v = MAX (1., ceil (gtk_adjustment_get_page_increment (m_vadjustment) / 10.));
 	_vte_debug_print(VTE_DEBUG_EVENTS,
 			"Scroll speed is %d lines per non-smooth scroll unit\n",
 			(int) v);
@@ -9784,16 +9766,6 @@ Terminal::decscusr_cursor_shape()
 }
 
 bool
-Terminal::set_scroll_speed(unsigned int scroll_speed)
-{
-        if (scroll_speed == m_scroll_speed)
-                return false;
-
-        m_scroll_speed = scroll_speed;
-        return true;
-}
-
-bool
 Terminal::set_scrollback_lines(long lines)
 {
         glong low, high, next;
@@ -9980,7 +9952,6 @@ Terminal::reset(bool clear_tabstops,
         /* Reset the visual bits of selection on hard reset, see bug 789954. */
         if (clear_history) {
                 deselect_all();
-                stop_autoscroll();  /* Required before setting m_selecting to false, see #105. */
                 m_selecting = FALSE;
                 m_selecting_had_delta = FALSE;
                 m_selection_origin = m_selection_last = { -1, -1, 1 };
@@ -10004,8 +9975,7 @@ Terminal::reset(bool clear_tabstops,
 }
 
 bool
-Terminal::set_pty(VtePty *new_pty,
-                  bool process_remaining)
+Terminal::set_pty(VtePty *new_pty)
 {
         if (new_pty == m_pty)
                 return false;
@@ -10022,7 +9992,7 @@ Terminal::set_pty(VtePty *new_pty,
 		/* Take one last shot at processing whatever data is pending,
 		 * then flush the buffers in case we're about to run a new
 		 * command, disconnecting the timeout. */
-		if (!m_incoming_queue.empty() && process_remaining) {
+		if (!m_incoming_queue.empty()) {
 			process_incoming();
                         while (!m_incoming_queue.empty())
                                 m_incoming_queue.pop();
@@ -10233,28 +10203,14 @@ Terminal::emit_pending_signals()
 
 	emit_adjustment_changed();
 
-        if (m_notification_received) {
+	if (m_notification_received) {
                 _vte_debug_print (VTE_DEBUG_SIGNALS,
                                   "Emitting `notification-received'.\n");
                 g_signal_emit(object, signals[SIGNAL_NOTIFICATION_RECEIVED], 0,
                               m_notification_summary.c_str(),
                               m_notification_body.c_str());
-                m_notification_received = false;
-        }
-
-        if (m_shell_preexec) {
-                _vte_debug_print (VTE_DEBUG_SIGNALS,
-                                  "Emitting `shell-preexec'.\n");
-                g_signal_emit(object, signals[SIGNAL_SHELL_PREEXEC], 0);
-                m_shell_preexec = FALSE;
-        }
-
-        if (m_shell_precmd) {
-                _vte_debug_print (VTE_DEBUG_SIGNALS,
-                                  "Emitting `shell-precmd'.\n");
-                g_signal_emit(object, signals[SIGNAL_SHELL_PRECMD], 0);
-                m_shell_precmd = FALSE;
-        }
+                m_notification_received = FALSE;
+	}
 
 	if (m_window_title_changed) {
                 if (m_window_title != m_window_title_pending) {
