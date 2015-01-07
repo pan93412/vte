@@ -2353,6 +2353,96 @@ vte_sequence_handler_return_terminal_id (VteTerminalPrivate *that, GValueArray *
 	vte_sequence_handler_send_primary_device_attributes (that, params);
 }
 
+static void
+vte_sequence_handler_send_notification (VteTerminalPrivate *that, GValueArray *params)
+{
+	GValue *value;
+	const char *end;
+	char *option = NULL;
+	char *str = NULL;
+	char *p, *validated;
+
+	g_clear_pointer (&that->m_notification_summary, g_free);
+	g_clear_pointer (&that->m_notification_body, g_free);
+
+	value = g_value_array_get_nth (params, 0);
+	if (value == NULL) {
+		goto out;
+	}
+
+	if (G_VALUE_HOLDS_STRING (value)) {
+		option = g_value_dup_string (value);
+	} else if (G_VALUE_HOLDS_POINTER (value)) {
+		option = that->ucs4_to_utf8 ((const guchar *)g_value_get_pointer (value));
+	} else {
+		goto out;
+	}
+
+	if (g_strcmp0 (option, "notify") != 0) {
+		goto out;
+	}
+
+	value = g_value_array_get_nth (params, 1);
+	if (value == NULL) {
+		goto out;
+	}
+
+	if (G_VALUE_HOLDS_STRING (value)) {
+		str = g_value_dup_string (value);
+	} else if (G_VALUE_HOLDS_POINTER (value)) {
+		str = that->ucs4_to_utf8 ((const guchar *)g_value_get_pointer (value));
+	} else {
+		goto out;
+	}
+
+	g_utf8_validate (str, strlen (str), &end);
+	validated = g_strndup (str, end - str);
+
+	/* No control characters allowed. */
+	for (p = validated; *p != '\0'; p++) {
+		if ((*p & 0x1f) == *p) {
+			*p = ' ';
+		}
+	}
+
+	that->m_notification_summary = validated;
+	g_free (str);
+
+	that->m_notification_received = TRUE;
+	if (params->n_values == 2) {
+		goto out;
+	}
+
+	value = g_value_array_get_nth (params, 2);
+	if (value == NULL) {
+		goto out;
+	}
+
+	if (G_VALUE_HOLDS_STRING (value)) {
+		str = g_value_dup_string (value);
+	} else if (G_VALUE_HOLDS_POINTER (value)) {
+		str = that->ucs4_to_utf8 ((const guchar *)g_value_get_pointer (value));
+	} else {
+		goto out;
+	}
+
+	g_utf8_validate (str, strlen (str), &end);
+	validated = g_strndup (str, end - str);
+
+	/* No control characters allowed. */
+	for (p = validated; *p != '\0'; p++) {
+		if ((*p & 0x1f) == *p) {
+			*p = ' ';
+		}
+	}
+
+	that->m_notification_body = validated;
+	g_free (str);
+
+ out:
+	g_free (option);
+}
+
 /* Send secondary device attributes. */
 static void
 vte_sequence_handler_send_secondary_device_attributes (VteTerminalPrivate *that, GValueArray *params)
