@@ -1360,6 +1360,10 @@ Terminal::handle_urxvt_extension(vte::parser::Sequence const& seq,
                 m_notification_body = *token;
                 return;
         }
+
+        if (*token == "preexec") {
+                m_shell_preexec = TRUE;
+        }
 }
 
 bool
