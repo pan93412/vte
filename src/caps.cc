@@ -257,6 +257,8 @@ const char _vte_xterm_capability_strings[] =
         ENTRY(OSC "119" BEL, "reset-highlight-foreground-color")
         ENTRY(OSC "133;%s" BEL, "iterm2-133")
         ENTRY(OSC "777;%s" BEL, "urxvt-777")
+        ENTRY(OSC "777;%s;%s;%s" BEL, "send-notification")
+        ENTRY(OSC "777;%s;%s" BEL, "send-notification")
         ENTRY(OSC "1337;%s" BEL, "iterm2-1337")
 
         COMMENT(/* Set text parameters, ST-terminated versions. */)
@@ -296,6 +298,8 @@ const char _vte_xterm_capability_strings[] =
         ENTRY(OSC "119" ST, "reset-highlight-foreground-color")
         ENTRY(OSC "133;%s" ST, "iterm2-133")
         ENTRY(OSC "777;%s" ST, "urxvt-777")
+        ENTRY(OSC "777;%s;%s;%s" ST, "send-notification")
+        ENTRY(OSC "777;%s;%s" ST, "send-notification")
         ENTRY(OSC "1337;%s" ST, "iterm2-1337")
 
         COMMENT(/* These may be bogus, I can't find docs for them anywhere (#104154). */)
