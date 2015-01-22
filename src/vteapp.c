@@ -49,6 +49,13 @@ static const char *builtin_dingus[] = {
 static gboolean use_gregex = FALSE;
 
 static void
+notification_received (GtkWidget *widget, const gchar *summary, const gchar *body)
+{
+	g_assert(VTE_TERMINAL(widget));
+	g_print("[%s]: %s\n", summary, body);
+}
+
+static void
 window_title_changed(GtkWidget *widget, gpointer win)
 {
 	GtkWindow *window;
@@ -965,6 +972,9 @@ main(int argc, char **argv)
 		g_signal_connect(widget, "icon-title-changed",
 				 G_CALLBACK(icon_title_changed), window);
 	}
+
+	g_signal_connect(widget, "notification-received",
+			 G_CALLBACK(notification_received), NULL);
 
 	/* Connect to the "button-press" event. */
 	g_signal_connect(widget, "button-press-event",
