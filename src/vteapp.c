@@ -641,6 +641,7 @@ main(int argc, char **argv)
                 hyperlink = TRUE;
 	char *geometry = NULL;
 	gint lines = -1;
+	gint scroll_speed = 0;
 	const char *message = "Launching interactive shell...\r\n";
 	const char *font = NULL;
 	const char *command = NULL;
@@ -748,6 +749,11 @@ main(int argc, char **argv)
 			"keep", 'k', 0,
 			G_OPTION_ARG_NONE, &keep,
 			"Live on after the window closes", NULL
+		},
+		{
+			"scroll-speed", 0, 0,
+			G_OPTION_ARG_INT, &scroll_speed,
+			"Specify the scroll speed", NULL
 		},
 		{
 			"scrollback-lines", 'n', 0,
@@ -1017,6 +1023,7 @@ main(int argc, char **argv)
 	vte_terminal_set_cursor_blink_mode(terminal, cursor_blink_mode);
 	vte_terminal_set_scroll_on_output(terminal, FALSE);
 	vte_terminal_set_scroll_on_keystroke(terminal, TRUE);
+	vte_terminal_set_scroll_speed(terminal, (guint) scroll_speed);
 	vte_terminal_set_scrollback_lines(terminal, lines);
 	vte_terminal_set_mouse_autohide(terminal, TRUE);
 
