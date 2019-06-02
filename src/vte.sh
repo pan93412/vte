@@ -1,5 +1,7 @@
 # Copyright © 2006 Shaun McCance <shaunm@gnome.org>
 # Copyright © 2013 Peter De Wachter <pdewacht@gmail.com>
+# Copyright © 2018 Debarshi Ray <rishi.is@lostca.se>
+# Copyright © 2019 Yi-Jyun Pan <pan93412@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +25,10 @@
 # Not running under vte?
 [ "${VTE_VERSION:-0}" -ge 3405 ] || return 0
 
+# LOAD: gettext
+export TEXTDOMAIN="vte-profile"
+. gettext.sh
+
 __vte_urlencode() (
   # This is important to make sure string manipulation is handled
   # byte-by-byte.
@@ -42,7 +48,7 @@ __vte_urlencode() (
 # Print a warning so that anyone who's added this manually to his PS1 can adapt.
 # The function will be removed in a later version.
 __vte_ps1() {
-  echo -n "(__vte_ps1 is obsolete)"
+  echo -n $(eval_gettext "(__vte_ps1 is obsolete)")
 }
 
 __vte_osc7 () {
@@ -54,7 +60,7 @@ __vte_prompt_command() {
   command="${command//;/ }"
   local pwd='~'
   [ "$PWD" != "$HOME" ] && pwd=${PWD/#$HOME\//\~\/}
-  printf '\033]777;notify;Command completed;%s\033\\\033]777;precmd\033\\\033]0;%s@%s:%s\033\\%s' "${command}" "${USER}" "${HOSTNAME%%.*}" "${pwd}" "$(__vte_osc7)"
+  printf '\033]777;notify;%s;%s\033\\\033]0;%s@%s:%s\033\\%s' $(eval_gettext "Command completed.") "${command}" "${USER}" "${HOSTNAME%%.*}" "${pwd}" "$(__vte_osc7)"
 }
 
 case "$TERM" in
